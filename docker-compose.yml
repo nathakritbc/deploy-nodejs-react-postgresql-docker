@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+ 
+  api :
+    build: ./express-back-end
+    depends_on: 
+      - db
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
+    environment:
+      # - EXTERNAL_PORT=3001
+      - PGUSER=postgres
+      - PGPASSWORD=12345678
+      - PGDATABASE=express-back-end
+      - PGHOST=db # NAME OF THE SERVICE
+    # volumes:
+    #   # Maps our current project directory `.` to
+    #   # our working directory in the container
+      - ./:/usr/src/app/
+    #   # node_modules workaround for volumes
+    #   # https://stackoverflow.com/a/32785014
+      - /usr/src/app/node_modules
+
+  client :
+    container_name: frontend
+    build: ./react-app-font-end
+    volumes:
+      - './react-app-font-end:/app'
+      - '/app/node_modules'
+    ports:
+      - 7075:3000
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm start
+    networks:
+      - frontend  
+ 
+  db:
+    image: postgres:14.5-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=express-back-end
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345678
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db-data:/var/lib/postgresql/data/pgdata 
+    networks:
+      - backend
+      - frontend
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    ports:
+      - "53603:53603"
+      - "80:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    networks:
+      - backend 
+
+  portainer:
+    image: portainer/portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes: 
+  db-data:
+  portainer_data:
+  pgadmin-data:
+
+networks:
+  backend:
+  frontend:
