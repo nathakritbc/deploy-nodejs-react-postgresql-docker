@@ -1,5 +1,20 @@
 version: '3.8'
 services:
+
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - nginx
+      - backend
+      - frontend
  
   api :
     build: ./express-back-end
@@ -30,7 +45,7 @@ services:
       - './react-app-font-end:/app'
       - '/app/node_modules'
     ports:
-      - 7075:3000
+      - 3000:3000
     stdin_open: true
     environment:
       - CHOKIDAR_USEPOLLING=true
@@ -58,7 +73,7 @@ services:
       - db
     ports:
       - "53603:53603"
-      - "80:80"
+      - "8085:80"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     environment:
@@ -85,3 +100,4 @@ volumes:
 networks:
   backend:
   frontend:
+  nginx:
